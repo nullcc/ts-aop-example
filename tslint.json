@@ -6,6 +6,9 @@
   "rules": {
     "prefer-conditional-expression": false,
     "max-classes-per-file": false,
-    "object-literal-sort-keys": false
+    "object-literal-sort-keys": false,
+    "no-this-assignment": false,
+    "ban-types": false,
+    "no-console": false
   }
 }

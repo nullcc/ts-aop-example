@@ -2,7 +2,7 @@ import * as fs from "fs";
 import { By, until, WebDriver, WebElement } from "selenium-webdriver";
 import { BaseObject } from "../object/base";
 
-export class BaseWebDriver extends BaseObject {
+export class OnionWebDriver extends BaseObject {
   protected webDriver: WebDriver;
   private methodMap: any;
 
@@ -17,23 +17,18 @@ export class BaseWebDriver extends BaseObject {
     });
   }
 
-  public registerHooksForMethods(
-    methods: string[],
-    beforeAction: Function,
-    afterAction: Function
-  ) {
+  public use(method, middleware) {
     const self = this;
-    methods.forEach(method => {
-      const originalMethod = self[method];
-      if (originalMethod) {
-        self[method] = async (...args) => {
-          const beforeActionRes = await beforeAction();
-          const methodRes = await originalMethod.call(self, ...args);
-          await afterAction(beforeActionRes, methodRes);
-          return methodRes;
-        };
-      }
-    });
+    const originalMethod = this[method];
+    if (originalMethod) {
+      this[method] = async (...args) => {
+        let res;
+        await middleware(async () => {
+          res = await originalMethod.call(self, ...args);
+        });
+        return res;
+      };
+    }
   }
 
   public getOriginalMethod(methodName) {
@@ -55,6 +50,12 @@ export class BaseWebDriver extends BaseObject {
   ) {
     await this.webDriver.wait(ec(by), timeout);
     return this.webDriver.findElement(by);
+  }
+
+  public async findAnyElementByText(text: string, timeout: number = 3000) {
+    const xpath: string = `//div[text()="${text}"]`;
+    const by: By = By.xpath(xpath);
+    return this.findElement(by, undefined, timeout);
   }
 
   public async takeScreenshot(filename) {

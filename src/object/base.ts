@@ -1,45 +1,17 @@
 class BaseObject {
-  constructor() { }
-
-  getClass() {
+  public getClass() {
     return this.constructor.prototype.constructor;
   }
 
-  getClassName() {
+  public getClassName() {
     return this.constructor.name;
   }
 
-  // for instance
-  getPrototypeChain() {
-    let obj = this;
-    let protoChain = [];
-    while (obj = Object.getPrototypeOf(obj)) {
-        protoChain.push(obj);
-    }
-    protoChain.push(null);
-    protoChain.splice(0, 0, this);
-    return protoChain;
-  }
-
-  // for class
-  static getPrototypeChain() {
-    let obj = this;
-    let protoChain = [];
-    while (obj = Object.getPrototypeOf(obj)) {
-        protoChain.push(obj);
-    }
-    protoChain.push(null);
-    protoChain.splice(0, 0, this);
-    return protoChain;
-  }
-
-  getInstanceMethodNames () {
+  public getInstanceMethodNames() {
     const proto = Object.getPrototypeOf(this);
     const names = Object.getOwnPropertyNames(proto);
-    return names.filter (name => typeof this[name] === 'function');
+    return names.filter(name => typeof this[name] === "function");
   }
 }
 
-export {
-  BaseObject
-}
+export { BaseObject };

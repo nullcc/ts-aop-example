@@ -25,13 +25,13 @@
   ],
   "author": "Ethan Zhang",
   "license": "ISC",
-  "homepage": "",
+  "homepage": "https://git.ringcentral.com/coding-now/ts-aop",
   "bugs": {
-    "url": ""
+    "url": "https://git.ringcentral.com/coding-now/ts-aop/issues"
   },
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://git.ringcentral.com/coding-now/ts-aop"
   },
   "dependencies": {
     "@types/es6-promise": "^3.3.0",
