@@ -1,0 +1,52 @@
+{
+  "name": "ts-aop",
+  "version": "1.0.0",
+  "description": "aop demo in ts and js",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "keywords": [
+    "apo"
+  ],
+  "scripts": {
+    "test": "jest --config jestconfig.json --coverage",
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\" \"tests/**/*.ts\"",
+    "lint": "tslint -p tsconfig.json",
+    "fix-tslint-errors": "tslint --fix \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src",
+    "postversion": "git push && git push --tags"
+  },
+  "pre-commit": [
+    "lint",
+    "test"
+  ],
+  "author": "Ethan Zhang",
+  "license": "ISC",
+  "homepage": "",
+  "bugs": {
+    "url": ""
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "dependencies": {
+    "@types/es6-promise": "^3.3.0",
+    "@types/node": "^10.9.4",
+    "@types/selenium-webdriver": "^3.0.10",
+    "selenium-webdriver": "^4.0.0-alpha.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^23.3.2",
+    "jest": "^23.6.0",
+    "pre-commit": "^1.2.2",
+    "prettier": "^1.14.2",
+    "ts-jest": "^23.1.4",
+    "tslint": "^5.11.0",
+    "tslint-config-prettier": "^1.15.0",
+    "typescript": "^3.0.3"
+  }
+}
