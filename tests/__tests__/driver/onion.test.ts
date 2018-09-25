@@ -9,20 +9,18 @@ describe("Test onion web driver", () => {
 
     const myWebDriver = new OnionWebDriver(driver);
 
-    const timeRecordingMiddleware = async next => {
-      console.log("setp start...");
+    const timeRecordingMiddleware = async (ctx, next) => {
       const start = new Date().getTime();
       await next();
       const end = new Date().getTime();
       const consume = end - start;
-      console.log("setp end...");
-      console.log(`time consume: ${consume}ms`);
+      console.log(`${ctx.methodName} time consume: ${consume}ms`);
     };
 
-    const takeScreenshot = async next => {
+    const takeScreenshot = async (ctx, next) => {
       await next();
       await myWebDriver.getOriginalMethod("takeScreenshot")(
-        `screenshot-${new Date()}`
+        `screenshot-${ctx.methodName}-${new Date().getTime()}`
       );
     };
 

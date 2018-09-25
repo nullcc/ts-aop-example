@@ -22,11 +22,15 @@ export class OnionWebDriver extends BaseObject {
     const originalMethod = this[method];
     if (originalMethod) {
       this[method] = async (...args) => {
-        let res;
-        await middleware(async () => {
-          res = await originalMethod.call(self, ...args);
+        let result;
+        const ctx = {
+          methodName: method,
+          args,
+        };
+        await middleware(ctx, async () => {
+          result = await originalMethod.call(self, ...args);
         });
-        return res;
+        return result;
       };
     }
   }
