@@ -3,17 +3,10 @@ import { BaseWebDriver } from "./base";
 
 export class HookWebDriver extends BaseWebDriver {
   protected webDriver: WebDriver;
-  private methodMap: any;
 
   constructor(webDriver) {
     super(webDriver);
     this.webDriver = webDriver;
-    this.methodMap = {};
-    const methods = this.getWebDriverMethods();
-    const self = this;
-    methods.forEach(method => {
-      self.methodMap[method] = self[method];
-    });
   }
 
   public registerHooksForMethods(
@@ -33,9 +26,5 @@ export class HookWebDriver extends BaseWebDriver {
         };
       }
     });
-  }
-
-  public getOriginalMethod(methodName) {
-    return this.methodMap[methodName].bind(this);
   }
 }

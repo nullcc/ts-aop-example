@@ -2,37 +2,42 @@ import * as fs from "fs";
 import { By, until, WebDriver, WebElement } from "selenium-webdriver";
 import { BaseObject } from "../object/base";
 
-function webDriverMethod() {
+export const webDriverMethod = () => {
   return (target, methodName: string, descriptor: PropertyDescriptor) => {
     const desc = {
       value: 'webDriverMethod',
       writable: false,
     };
-    Object.defineProperty(target[methodName], 'type', desc)
+    Object.defineProperty(target[methodName], '__type__', desc);
   }
 }
 
 export class BaseWebDriver extends BaseObject {
   protected webDriver: WebDriver;
+  protected methodMap: any;
 
   constructor(webDriver) {
     super();
     this.webDriver = webDriver;
+    this.methodMap = {};
   }
 
   public getWebDriverMethods() {
     const methods = this.getInstanceMethodNames();
     const webDriverMethods = [];
     for (const method of methods) {
-      const descriptor = Object.getOwnPropertyDescriptor(this[method], 'type');
+      const descriptor = Object.getOwnPropertyDescriptor(this[method], '__type__');
       if (descriptor && descriptor.value === 'webDriverMethod') {
         webDriverMethods.push(method);
       }
     }
-    console.log(webDriverMethods);
     return webDriverMethods;
   }
 
+  public getOriginalMethod(methodName) {
+    return this.methodMap[methodName].bind(this);
+  }
+  
   @webDriverMethod()
   public async get(url) {
     await this.webDriver.get(url);
@@ -50,7 +55,7 @@ export class BaseWebDriver extends BaseObject {
     timeout: number = 3000
   ) {
     await this.webDriver.wait(ec(by), timeout);
-    return this.webDriver.findElement(by);
+    return await this.webDriver.findElement(by);
   }
 
   @webDriverMethod()

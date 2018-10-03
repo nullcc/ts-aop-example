@@ -3,17 +3,9 @@ import { BaseWebDriver } from "./base";
 
 export class OnionWebDriver extends BaseWebDriver {
   protected webDriver: WebDriver;
-  private methodMap: any;
 
   constructor(webDriver) {
     super(webDriver);
-    this.methodMap = {};
-    const methods = this.getWebDriverMethods();
-
-    const self = this;
-    methods.forEach(method => {
-      self.methodMap[method] = self[method];
-    });
   }
 
   public use(method, middleware) {
@@ -32,9 +24,5 @@ export class OnionWebDriver extends BaseWebDriver {
         return result;
       };
     }
-  }
-
-  public getOriginalMethod(methodName) {
-    return this.methodMap[methodName].bind(this);
   }
 }
