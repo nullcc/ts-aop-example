@@ -1,5 +1,5 @@
 import { Builder, By, Key } from "selenium-webdriver";
-import { BaseWebDriver } from "../../../src/driver/base";
+import { HookWebDriver } from "../../../src/driver/hook";
 
 const url = "https://www.google.com/";
 
@@ -7,7 +7,7 @@ describe("Test base web driver", () => {
   test("Record time consume for every step.", async () => {
     const driver = new Builder().forBrowser("chrome").build();
 
-    const myWebDriver = new BaseWebDriver(driver);
+    const myWebDriver = new HookWebDriver(driver);
 
     const recordStartTime = async () => {
       const start = new Date().getTime();
@@ -43,7 +43,7 @@ describe("Test base web driver", () => {
   test("Take screenshot after every step", async () => {
     const driver = new Builder().forBrowser("chrome").build();
 
-    const myWebDriver = new BaseWebDriver(driver);
+    const myWebDriver = new HookWebDriver(driver);
 
     const nullOp = async () => {
       return;

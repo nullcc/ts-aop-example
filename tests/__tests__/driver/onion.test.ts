@@ -19,6 +19,7 @@ describe("Test onion web driver", () => {
 
     const takeScreenshot = async (ctx, next) => {
       await next();
+      console.log('take screenshot...');
       await myWebDriver.getOriginalMethod("takeScreenshot")(
         `screenshot-${ctx.methodName}-${new Date().getTime()}`
       );
