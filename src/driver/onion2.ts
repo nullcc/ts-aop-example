@@ -9,10 +9,6 @@ export class Onion2WebDriver extends BaseWebDriver {
     super(webDriver);
     const methods = this.getWebDriverMethods();
     const self = this;
-    methods.forEach(method => {
-      self.methodMap[method] = self[method];
-    });
-
     for (const method of methods) {
       const desc = {
         enumerable: true,
@@ -20,7 +16,7 @@ export class Onion2WebDriver extends BaseWebDriver {
         get() {
           if (methods.includes(method) && this.compose) {
             const originFn = async (...args) => {
-              return await this.methodMap[method].apply(self, ...args);
+              return this.methodMap[method].apply(self, ...args);
             }           
             const fn = this.compose();
             return fn.bind(null, originFn.bind(self));

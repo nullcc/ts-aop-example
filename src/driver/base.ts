@@ -20,6 +20,11 @@ export class BaseWebDriver extends BaseObject {
     super();
     this.webDriver = webDriver;
     this.methodMap = {};
+    const methods = this.getWebDriverMethods();
+    const self = this;
+    methods.forEach(method => {
+      self.methodMap[method] = self[method];
+    });
   }
 
   public getWebDriverMethods() {
@@ -55,7 +60,7 @@ export class BaseWebDriver extends BaseObject {
     timeout: number = 3000
   ) {
     await this.webDriver.wait(ec(by), timeout);
-    return await this.webDriver.findElement(by);
+    return this.webDriver.findElement(by);
   }
 
   @webDriverMethod()
