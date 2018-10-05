@@ -16,15 +16,15 @@ export class Onion2WebDriver extends BaseWebDriver {
         get() {
           if (methods.includes(method) && this.compose) {
             const originFn = async (...args) => {
-              return this.methodMap[method].apply(self, ...args);
-            }           
+              return this.methodMap[method].call(self, ...args);
+            }
             const fn = this.compose();
             return fn.bind(null, originFn.bind(self));
           }
           return this.methodMap[method].bind(this);
         },
         set(value) {
-          // this[method] = value;
+          this[method] = value;
         },
       };
       Object.defineProperty(this, method, desc); 
@@ -53,7 +53,7 @@ export class Onion2WebDriver extends BaseWebDriver {
         }
         try {
           if (i === middlewares.length) {
-            res = await Promise.resolve(fn.call(self, args));
+            res = await Promise.resolve(fn.call(self, ...args));
             return res;
           }
           return Promise.resolve(fn(dispatch.bind(null, (i+1))));

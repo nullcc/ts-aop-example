@@ -69,7 +69,7 @@ describe("Test base web driver", () => {
       await myWebDriver.sendKeys(searchInput, "node.js", " v8");
       await myWebDriver.sendKeys(searchInput, Key.ENTER);
     } catch (err) {
-      console.log(err);
+      console.error(err);
     } finally {
       driver.quit();
     }
