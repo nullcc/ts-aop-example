@@ -50,7 +50,7 @@ describe("Test base web driver", () => {
     };
     const takeScreenshot = async () => {
       await myWebDriver.getOriginalMethod("takeScreenshot")(
-        `screenshot-${new Date()}`
+        `screenshot-${new Date().getTime()}`
       );
     };
 
