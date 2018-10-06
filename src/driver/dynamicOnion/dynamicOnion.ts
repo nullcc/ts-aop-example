@@ -1,7 +1,7 @@
 import { WebDriver } from "selenium-webdriver";
-import { BaseWebDriver, webDriverMethod } from "./base";
+import { BaseWebDriver } from "./base";
 
-export class Onion2WebDriver extends BaseWebDriver {
+export class DynamicOnionWebDriver extends BaseWebDriver {
   protected webDriver: WebDriver;
   private middlewares = [];
 
@@ -15,33 +15,36 @@ export class Onion2WebDriver extends BaseWebDriver {
         configurable: true,
         get() {
           if (methods.includes(method) && this.compose) {
+            const ctx = { // put some information in ctx if necessary
+              methodName: method,
+            }
             const originFn = async (...args) => {
               return this.methodMap[method].call(self, ...args);
-            }
+            };
             const fn = this.compose();
-            return fn.bind(null, originFn.bind(self));
+            return fn.bind(null, ctx, originFn.bind(self));
           }
           return this.methodMap[method].bind(this);
         },
         set(value) {
           this[method] = value;
-        },
+        }
       };
-      Object.defineProperty(this, method, desc); 
+      Object.defineProperty(this, method, desc);
     }
   }
 
   public use(middleware) {
-    if (typeof middleware !== 'function') {
-      throw new TypeError('Middleware must be a function!');
+    if (typeof middleware !== "function") {
+      throw new TypeError("Middleware must be a function!");
     }
     this.middlewares.push(middleware);
   }
 
-  public compose() {
+  private compose() {
     const middlewares = this.middlewares;
     const self = this;
-    return async (next, ...args) => {
+    return async (ctx, next, ...args) => {
       let res;
       const dispatch = async i => {
         let fn = middlewares[i];
@@ -49,20 +52,20 @@ export class Onion2WebDriver extends BaseWebDriver {
           fn = next;
         }
         if (!fn) {
-          return Promise.resolve()
+          return Promise.resolve();
         }
         try {
           if (i === middlewares.length) {
             res = await Promise.resolve(fn.call(self, ...args));
             return res;
           }
-          return Promise.resolve(fn(dispatch.bind(null, (i+1))));
+          return Promise.resolve(fn(ctx, dispatch.bind(null, i + 1)));
         } catch (err) {
           return Promise.reject(err);
         }
       };
       await dispatch(0);
       return res;
-    }
+    };
   }
 }

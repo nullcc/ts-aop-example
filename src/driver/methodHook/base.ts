@@ -1,16 +1,6 @@
 import * as fs from "fs";
 import { By, until, WebDriver, WebElement } from "selenium-webdriver";
-import { BaseObject } from "../object/base";
-
-export const webDriverMethod = () => {
-  return (target, methodName: string, descriptor: PropertyDescriptor) => {
-    const desc = {
-      value: 'webDriverMethod',
-      writable: false,
-    };
-    Object.defineProperty(target[methodName], '__type__', desc);
-  }
-}
+import { BaseObject } from "../../object/base";
 
 export class BaseWebDriver extends BaseObject {
   protected webDriver: WebDriver;
@@ -19,41 +9,52 @@ export class BaseWebDriver extends BaseObject {
   constructor(webDriver) {
     super();
     this.webDriver = webDriver;
-    this.methodMap = {};
-    const methods = this.getWebDriverMethods();
+    this.methodMap = {}; // keep original method, k: method name, v: method
     const self = this;
+    const methods = [
+      'get', 
+      'quit', 
+      'findElement', 
+      'findAnyElementByText', 
+      'takeScreenshot',
+      'sendKeys',
+      'click',
+      'sleep',
+    ];
     methods.forEach(method => {
       self.methodMap[method] = self[method];
     });
   }
 
-  public getWebDriverMethods() {
-    const methods = this.getInstanceMethodNames();
-    const webDriverMethods = [];
-    for (const method of methods) {
-      const descriptor = Object.getOwnPropertyDescriptor(this[method], '__type__');
-      if (descriptor && descriptor.value === 'webDriverMethod') {
-        webDriverMethods.push(method);
-      }
-    }
-    return webDriverMethods;
-  }
-
+  /**
+   * Get original method reference by method name.
+   * @param methodName
+   */
   public getOriginalMethod(methodName) {
     return this.methodMap[methodName].bind(this);
   }
-  
-  @webDriverMethod()
+
+  /**
+   * Browser navigate to url.
+   * @param url
+   */
   public async get(url) {
     await this.webDriver.get(url);
   }
 
-  @webDriverMethod()
+  /**
+   * Browser quit.
+   */
   public async quit() {
     await this.webDriver.quit();
   }
 
-  @webDriverMethod()
+  /**
+   * Find element on web page.
+   * @param by
+   * @param ec
+   * @param timeout
+   */
   public async findElement(
     by: By,
     ec: Function = until.elementLocated,
@@ -63,14 +64,21 @@ export class BaseWebDriver extends BaseObject {
     return this.webDriver.findElement(by);
   }
 
-  @webDriverMethod()
+  /**
+   * Find element on web page by text.
+   * @param text
+   * @param timeout
+   */
   public async findAnyElementByText(text: string, timeout: number = 3000) {
     const xpath: string = `//div[text()="${text}"]`;
     const by: By = By.xpath(xpath);
     return this.findElement(by, undefined, timeout);
   }
 
-  @webDriverMethod()
+  /**
+   * Take a screenshot and save.
+   * @param filename
+   */
   public async takeScreenshot(filename) {
     await this.webDriver.sleep(0);
     const screenshot = await this.webDriver.takeScreenshot();
@@ -78,18 +86,28 @@ export class BaseWebDriver extends BaseObject {
     const buffer = new Buffer(data, "base64");
     fs.writeFileSync(`screenshot/${filename}.png`, buffer);
   }
-  
-  @webDriverMethod()
+
+  /**
+   * Send keys to element.
+   * @param webElement
+   * @param args
+   */
   public async sendKeys(webElement: WebElement, ...args) {
     await webElement.sendKeys(...args);
   }
 
-  @webDriverMethod()
+  /**
+   * Click element.
+   * @param webElement
+   */
   public async click(webElement: WebElement) {
     await webElement.click();
   }
 
-  @webDriverMethod()
+  /**
+   * Sleep.
+   * @param time
+   */
   public async sleep(time: number) {
     await this.webDriver.sleep(time);
   }

@@ -16,9 +16,10 @@ AOP makes it possible to resolve this problem elegantly.
 
 ## AOP vs OOP
 
-OOP即面向对象编程，这个大家再熟悉不过。当面对一份需求时，我们一般会先将需求中的领域模型分析出来，再针对这些领域模型建模，每种领域模型有它们自己的属性和方法。在OOP领域，我们可以利用接口、继承、多态等抽象机制以及一系列相关的设计模式来实现我们的需求。
+We are familiar with Object Oriented Programming (OOP). When we get a requirements, firstly we analyze the requirements and extract some domain models. Every domain model has its own attributes and methods. People using encapsulatioBase on thesen, composition, inheritance, polymorphism and design patterns to building software and practice the thinking of OOP.
 
-很容易发现，OOP实际上是针对静态内容的建模，或者说是针对名词的建模。例如创建一个Employee类，这个类有name, age, title, department等实例属性，也有work, takeABreak等实例方法。实例属性描述对象实例固有的一些特征，实例方法描述对象实例可以执行的操作。基于此，我们可以写出
+If you have experiences about building software with OOP you will find that OOP is to model static things.
+In other words, OOP is for nouns. For example, we have a `Employee` class with attributes `name`, `age`, `title` and `department`, with methods `work`, `takeABreak`. Attributes describe characteristics of objects, and methods are the operations objects can execute. Base on these, we can write some OO code:
 
 ```
 Employee employee = new Employee(...);
@@ -26,11 +27,13 @@ employee.work();
 employee.takeABreak();
 ```
 
-这样描述性很强的方法。上面代码中调用的方法都是和Employee类强关联的，这些强关联的方法组成业务逻辑。毋庸置疑，OOP在写业务逻辑（也就是描述事物）方面具有很大的优势。
+Above code is strong related with Employee class which form the business logic. There is no doubt that, OOP is very suitable for describing objects.
 
-但是在实际编程中，我们可能想要有更“动态”一些的东西，比如我们希望在用户执行一个敏感操作时写日志。如果用OOP去实现，我们只能修改这个敏感操作的代码，将写日志这个操作的代码加入进去。如果后来发现有另一个操作也需要这样处理，只能照原样再来一次。这样做当然可以工作，但是却很不优雅。写日志这种操作和业务逻辑是没有关系的，但是还是要修改业务逻辑的代码。如果用AOP的方式去处理，我们可以在具体操作执行前后各暴露出一个切面，在这些切面上动态地“织入”这些辅助代码。也就是说，AOP是面向动作（动词）的。有了OOP和AOP的合作，我们的代码会变得更优雅，更有可扩展性。
+But sometime we may want some more "dynamic" things, such as we hope to logging while user is executing a sensitive operation. If we choose OOP implementation, we must modify the code of the sensitive operation to add logging code to it. It's work of course, but no elegant. Actually it againsts OCP (open closed principle). Logging are not strongly correlated with the sensitive operation above. We had better do not to modify business logic to add logging feature. 
 
-举一个最简单的AOP的例子：函数包装。假设我们有一个函数op，我们需要再其执行前后都写日志:
+But how to reslove it? We can try AOP. Simplely, we can expose two sections in specific operation: one before it and another after it, then weave in other functions dynamically in runtime. That is to say AOP is for verbs. Our code will become more elegant and extendable with the cooperation of OOP and AOP.
+
+A simple example: function wrapping. Assume we have a function `op`, we want to logging something before and after it:
 
 ```
 let op = () => {
@@ -46,30 +49,214 @@ op = () => {
 }
 ```
 
-这里我们并没有直接修改op代码本身，而是对其进行了包装，首先保存op的原引用到oriOp，然后创建一个新函数赋值给op，这个新函数在内部调用oriOp（也就是原来的op），而在其前后增加了写日志的操作。这样一来，在不直接修改op原来代码的情况下，我们在op的基础上提供了写日志的功能。
+This time we wrap the function instead of modifying it.
 
-当然实际项目代码中的AOP要比这个例子复杂很多，基本上都会用到编程语言元编程的一些东西，但是基本原理其实和这个例子所展示的类似。值得一提的是，AOP是一种编程概念，而并不是某一种编程语言所特有，大部分编程语言都可以以AOP的方式写代码。
+AOP code in project is more complex than code above. Basically we need some meta programming technique to support AOP. But the basic principle is similar with code above. It is worth mentioning that AOP is a programming concept, but not own by a specific programming language. Most of programming languages can be written in AOP way.
 
 
 ## Solution 1 - Simple Method Hooks
 
-Solution 1 use hooks to wrap original methods to new methods, we put the auxiliary functions in hooks.
-See [hook driver](./src/driver/hook.ts)
+Solution 1 use hooks (before/after action) to wrap original method to new method, we put the auxiliary functions in hooks.
+See [base driver](./src/driver/methodHook/base.ts) and [method hook driver](./src/driver/methodHook/methodHook.ts).
+
+Issues: It's difficult to handle relationship between before action and after action. For example, if we want to record time consuming of an action, the before action and after action will be:
+
+```typescript
+// before action
+const recordStartTime = async () => {
+  const start = new Date().getTime();
+  return start;
+};
+
+// after action
+const recordEndTime = async start => {
+  const end = new Date().getTime();
+  const consume = end - start;
+  console.log(`time consume: ${consume}ms`);
+};
+```
+
+and `registerHooksForMethods`:
+
+```typescript
+public registerHooksForMethods(
+    methods: string[],
+    beforeAction: Function,
+    afterAction: Function
+  ) {
+    const self = this;
+    methods.forEach(method => {
+      const originalMethod = self[method]; // original method reference
+      if (originalMethod) {
+        self[method] = async (...args) => { // wrap original method
+          const beforeActionRes = await beforeAction();
+          const methodRes = await originalMethod.call(self, ...args);
+          await afterAction(beforeActionRes, methodRes);
+          return methodRes;
+        };
+      }
+    });
+  }
+```
+
+As you can see above, in `registerHooksForMethods` method, we have to get the return value of before action and pass it to after action which implementation is ugly and inflexible.
+
+So, we give up this solution even it may work.
 
 
-## Solution 2 - Simple Onion Model
+## Solution 2 - Static Onion Model
 
-See [onion driver](./src/driver/onion.ts)
-
-
-## Solution 3 - Advanced Onion Model
-
-See [onion2 driver](./src/driver/onion2.ts)
-
-
-## AOP Programming in Koa
+Let's look at an interesting model first: middleware onion model in [Koa](https://koajs.com/):
 
 ![Koa middileware onion model](./images/koa_onion.png)
+
+See [base driver](./src/driver/staticOnion/base.ts) and [static onion driver](./src/driver/staticOnion/staticOnion.ts).
+
+Static onion model is much better than method hook. It use onion model to reslove issues in method hook solution. We use a decorator to decorate methods:
+
+```typescript
+// decorator
+export const webDriverMethod = () => {
+  return (target, methodName: string, descriptor: PropertyDescriptor) => {
+    const desc = {
+      value: "webDriverMethod",
+      writable: false
+    };
+    Object.defineProperty(target[methodName], "__type__", desc);
+  };
+};
+
+// in BaseWebDriver class, a web driver method
+@webDriverMethod()
+public async findElement(
+  by: By,
+  ec: Function = until.elementLocated,
+  timeout: number = 3000
+) {
+  await this.webDriver.wait(ec(by), timeout);
+  return this.webDriver.findElement(by);
+}
+```
+
+Call `use` method to add a middleware:
+
+```typescript
+public use(middleware) {
+  const webDriverMethods = this.getWebDriverMethods();
+  const self = this;
+  for (const method of webDriverMethods) {
+    const originalMethod = this[method];
+    if (originalMethod) {
+      this[method] = async (...args) => {
+        let result;
+        const ctx = {
+          methodName: method,
+          args
+        };
+        await middleware(ctx, async () => {
+          result = await originalMethod.call(self, ...args);
+        });
+        return result;
+      };
+      // check this: we must decorate new method every time when adding a middleware
+      this.decorate(this[method]); 
+    }
+  }
+}
+
+private decorate(method) {
+  const desc = {
+    value: "webDriverMethod",
+    writable: false
+  };
+  Object.defineProperty(method, "__type__", desc);
+}
+```
+
+But there is a little disadvantage: We must decorate new method every time when adding a middleware. In order to avoid this, we can wrap the method in runtime dynamically. Let's move on to Solution 3.
+
+
+## Solution 3 - Dynamic Onion Model
+
+See [base driver](./src/driver/dynamicOnion/base.ts) and [dynamic onion driver](./src/driver/dynamicOnion/dynamicOnion.ts).
+
+```typescript
+export class DynamicOnionWebDriver extends BaseWebDriver {
+  protected webDriver: WebDriver;
+  private middlewares = [];
+
+  constructor(webDriver) {
+    super(webDriver);
+    const methods = this.getWebDriverMethods();
+    const self = this;
+    for (const method of methods) {
+      const desc = {
+        enumerable: true,
+        configurable: true,
+        get() {
+          if (methods.includes(method) && this.compose) {
+            const ctx = { // put some information in ctx if necessary
+              methodName: method,
+            }
+            const originFn = async (...args) => {
+              return this.methodMap[method].call(self, ...args);
+            };
+            const fn = this.compose();
+            return fn.bind(null, ctx, originFn.bind(self));
+          }
+          return this.methodMap[method].bind(this);
+        },
+        set(value) {
+          this[method] = value;
+        }
+      };
+      Object.defineProperty(this, method, desc);
+    }
+  }
+
+  public use(middleware) {
+    if (typeof middleware !== "function") {
+      throw new TypeError("Middleware must be a function!");
+    }
+    this.middlewares.push(middleware);
+  }
+
+  private compose() {
+    const middlewares = this.middlewares;
+    const self = this;
+    return async (ctx, next, ...args) => {
+      let res;
+      const dispatch = async i => {
+        let fn = middlewares[i];
+        if (i === middlewares.length) {
+          fn = next;
+        }
+        if (!fn) {
+          return Promise.resolve();
+        }
+        try {
+          if (i === middlewares.length) {
+            res = await Promise.resolve(fn.call(self, ...args));
+            return res;
+          }
+          return Promise.resolve(fn(ctx, dispatch.bind(null, i + 1)));
+        } catch (err) {
+          return Promise.reject(err);
+        }
+      };
+      await dispatch(0);
+      return res;
+    };
+  }
+}
+```
+
+Dynamic onion model is much complex than solution 1 and 2. We use `Object.defineProperty` to define our getter for every method which is taged by `webDriverMethod` decorator. The `compose` method is the key to organize all middlewares and the original method, method getter will call `compose` method when we want to get a method and finally return a wrapped method.
+
+Dynamic onion model is a little difficult to understand but it is worthy to take your time to learn it.
+
+BTW: method hook, static onion model and dynamic onion model these names is invented by myself, if you find a better way to describe them, please tell me.
+
 
 ## Run tests
 

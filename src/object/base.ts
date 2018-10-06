@@ -11,11 +11,11 @@ class BaseObject {
     let props = [];
     let obj = this;
     do {
-        props = props.concat(Object.getOwnPropertyNames(obj));
-        obj = Object.getPrototypeOf(obj);
+      props = props.concat(Object.getOwnPropertyNames(obj));
+      obj = Object.getPrototypeOf(obj);
     } while (obj);
     return props.sort().filter((e, i, arr) => {
-      if ( e !== arr[i+1] && this[e] && typeof this[e] === 'function') {
+      if (e !== arr[i + 1] && this[e] && typeof this[e] === "function") {
         return true;
       }
     });

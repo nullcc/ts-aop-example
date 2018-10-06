@@ -1,13 +1,13 @@
 import { Builder, By, Key } from "selenium-webdriver";
-import { OnionWebDriver } from "../../../src/driver/onion";
+import { DynamicOnionWebDriver } from "../../../src/driver/dynamicOnion/dynamicOnion";
 
 const url = "https://www.google.com/";
 
-describe("Test onion web driver", () => {
+describe("Test onion2 web driver", () => {
   test("Record time consume and take screenshot for every step.", async () => {
     const driver = new Builder().forBrowser("chrome").build();
 
-    const myWebDriver = new OnionWebDriver(driver);
+    const myWebDriver = new DynamicOnionWebDriver(driver);
 
     const timeRecordingMiddleware = async (ctx, next) => {
       const start = new Date().getTime();
@@ -19,25 +19,14 @@ describe("Test onion web driver", () => {
 
     const takeScreenshot = async (ctx, next) => {
       await next();
-      console.log('take screenshot...');
+      console.log("take screenshot...");
       await myWebDriver.getOriginalMethod("takeScreenshot")(
         `screenshot-${new Date().getTime()}`
       );
     };
 
-    myWebDriver.use("get", timeRecordingMiddleware);
-    myWebDriver.use("quit", timeRecordingMiddleware);
-    myWebDriver.use("findElement", timeRecordingMiddleware);
-    myWebDriver.use("takeScreenshot", timeRecordingMiddleware);
-    myWebDriver.use("sendKeys", timeRecordingMiddleware);
-    myWebDriver.use("click", timeRecordingMiddleware);
-
-    myWebDriver.use("get", takeScreenshot);
-    myWebDriver.use("quit", takeScreenshot);
-    myWebDriver.use("findElement", takeScreenshot);
-    myWebDriver.use("takeScreenshot", takeScreenshot);
-    myWebDriver.use("sendKeys", takeScreenshot);
-    myWebDriver.use("click", takeScreenshot);
+    myWebDriver.use(timeRecordingMiddleware);
+    myWebDriver.use(takeScreenshot);
 
     try {
       await myWebDriver.get(url);
