@@ -19,17 +19,54 @@ AOP makes it possible to resolve this problem elegantly.
 We are familiar with Object Oriented Programming (OOP). When we get a requirements, firstly we analyze the requirements and extract some domain models. Every domain model has its own attributes and methods. People using encapsulatioBase on thesen, composition, inheritance, polymorphism and design patterns to building software and practice the thinking of OOP.
 
 If you have experiences about building software with OOP you will find that OOP is to model static things.
-In other words, OOP is for nouns. For example, we have a `Employee` class with attributes `name`, `age`, `title` and `department`, with methods `work`, `takeABreak`. Attributes describe characteristics of objects, and methods are the operations objects can execute. Base on these, we can write some OO code:
+In other words, OOP is for nouns. For example, we have a `Employee` class with attributes `name`, `age`, `title` and `department`, with methods `work`, `takeABreak` and `loginAdminSystem`. Attributes describe characteristics of objects, and methods are the operations objects can execute. Base on these, we can write some OO code:
 
-```
-Employee employee = new Employee(...);
+```typescript
+class Employee {
+  private name: string;
+  private age: number;
+  private title: string;
+  private department: string;
+
+  constructor(name: string, age: number, title: string, department: string) {
+    this.name = name;
+    this.age = age;
+    this.title = title;
+    this.department = department;
+  }
+
+  public work() {
+    // code for working...
+  }
+
+  public takeABreak() {
+    // code for taking a break...
+  }
+
+  public loginAdminSystem() {
+    // code for logining admin system, it's a sensitive operation
+  }
+}
+
+const employee = new Employee('Bob', 35, 'Software Development Engineer', 'Devlopment');
 employee.work();
 employee.takeABreak();
 ```
 
 Above code is strong related with Employee class which form the business logic. There is no doubt that, OOP is very suitable for describing objects.
 
-But sometime we may want some more "dynamic" things, such as we hope to logging while user is executing a sensitive operation. If we choose OOP implementation, we must modify the code of the sensitive operation to add logging code to it. It's work of course, but no elegant. Actually it againsts OCP (open closed principle). Logging are not strongly correlated with the sensitive operation above. We had better do not to modify business logic to add logging feature. 
+But sometime we may want some more "dynamic" things, such as we hope to logging while user is executing a sensitive operation. If we choose OOP implementation, we must modify the code of the sensitive operation `loginAdminSystem` to add logging code to it. Like this:
+
+```typescript
+...
+public loginAdminSystem() {
+  // added: code for logging some information
+  // code for logining admin system
+}
+...
+```
+
+It's work of course, but no elegant. Actually it againsts OCP (open closed principle). Logging are not strongly correlated with the sensitive operation above. We had better do not to modify business logic to add logging feature. 
 
 But how to reslove it? We can try AOP. Simplely, we can expose two sections in specific operation: one before it and another after it, then weave in other functions dynamically in runtime. That is to say AOP is for verbs. Our code will become more elegant and extendable with the cooperation of OOP and AOP.
 
